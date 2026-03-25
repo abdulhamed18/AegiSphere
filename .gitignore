@@ -208,3 +208,4 @@ __marimo__/
 check_output.txt
 check_utf8.txt
 package-lock.json
+node_modules/
