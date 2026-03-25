@@ -1,0 +1,259 @@
+{% extends "base/app.html" %}
+
+{% block content %}
+<!-- KPI Cards -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Open Alerts</p>
+        <p class="text-2xl font-semibold text-zinc-100">{{ open_alerts_count|default:"0" }}</p>
+    </div>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Open Cases</p>
+        <p class="text-2xl font-semibold text-zinc-100">{{ open_cases_count|default:"0" }}</p>
+    </div>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">SLA Breaches</p>
+        <p class="text-2xl font-semibold text-zinc-100">{{ sla_breach_alerts_count|default:"0" }}</p>
+    </div>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">MTTD (hrs)</p>
+        <p class="text-2xl font-semibold text-zinc-100">{{ avg_mttd_display|default:"N/A" }}</p>
+    </div>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">MTTR (hrs)</p>
+        <p class="text-2xl font-semibold text-zinc-100">{{ avg_mttr_display|default:"N/A" }}</p>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid grid-cols-12 gap-6 mb-6">
+    <!-- Alerts by Severity -->
+    <div class="col-span-12 lg:col-span-6 bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <h3 class="text-sm font-medium text-zinc-300 mb-3">Alerts by Severity</h3>
+        <div class="h-56">
+            <canvas id="chart-severity"></canvas>
+        </div>
+    </div>
+
+    <!-- Cases by Status -->
+    <div class="col-span-12 lg:col-span-6 bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <h3 class="text-sm font-medium text-zinc-300 mb-3">Cases by Status</h3>
+        <div class="h-56">
+            <canvas id="chart-case-status"></canvas>
+        </div>
+    </div>
+
+    <!-- SLA Compliance -->
+    <div class="col-span-12 lg:col-span-6 bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <h3 class="text-sm font-medium text-zinc-300 mb-3">SLA Compliance</h3>
+        <div class="h-56 flex items-center justify-center">
+            <canvas id="chart-sla"></canvas>
+        </div>
+    </div>
+
+    <!-- MITRE Distribution -->
+    <div class="col-span-12 lg:col-span-6 bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <h3 class="text-sm font-medium text-zinc-300 mb-3">MITRE ATT&CK (Top 5)</h3>
+        <div class="h-56">
+            <canvas id="chart-mitre"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="grid grid-cols-12 gap-6">
+    <!-- Recent Alerts -->
+    <div class="col-span-12 lg:col-span-4 bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <h3 class="text-sm font-medium text-zinc-300 mb-3">Recent Alerts</h3>
+        <div class="space-y-2">
+            {% for alert in recent_alerts %}
+            <a href="{% url 'alerts:detail' alert.pk %}"
+               class="block px-3 py-2 rounded-md hover:bg-zinc-800 transition-colors">
+                <p class="text-sm text-zinc-200 truncate">{{ alert.title }}</p>
+                <p class="text-xs text-zinc-500 mt-0.5">{{ alert.severity }} · {{ alert.status }}</p>
+            </a>
+            {% empty %}
+            <p class="text-sm text-zinc-500 px-3">No recent alerts</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Cases -->
+    <div class="col-span-12 lg:col-span-4 bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <h3 class="text-sm font-medium text-zinc-300 mb-3">Recent Cases</h3>
+        <div class="space-y-2">
+            {% for case in recent_cases %}
+            <a href="{% url 'cases:case-detail' case.pk %}"
+               class="block px-3 py-2 rounded-md hover:bg-zinc-800 transition-colors">
+                <p class="text-sm text-zinc-200 truncate">{{ case.title }}</p>
+                <p class="text-xs text-zinc-500 mt-0.5">{{ case.severity }} · {{ case.status }}</p>
+            </a>
+            {% empty %}
+            <p class="text-sm text-zinc-500 px-3">No recent cases</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Audit Events -->
+    <div class="col-span-12 lg:col-span-4 bg-zinc-900 border border-zinc-800 rounded-md p-4">
+        <h3 class="text-sm font-medium text-zinc-300 mb-3">Recent Activity</h3>
+        <div class="space-y-2">
+            {% for event in recent_audit_events %}
+            <div class="px-3 py-2">
+                <p class="text-sm text-zinc-200 truncate">{{ event.action }}</p>
+                <p class="text-xs text-zinc-500 mt-0.5">{{ event.actor.username|default:"System" }} · {{ event.created_at|timesince }} ago</p>
+            </div>
+            {% empty %}
+            <p class="text-sm text-zinc-500 px-3">No recent activity</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    var chartData = JSON.parse('{{ chart_data_json|escapejs }}');
+
+    // Grayscale palette for charts
+    var zinc = {
+        100: '#f4f4f5',
+        200: '#e4e4e7',
+        300: '#d4d4d8',
+        400: '#a1a1aa',
+        500: '#71717a',
+        600: '#52525b',
+        700: '#3f3f46',
+        800: '#27272a',
+        900: '#18181b'
+    };
+
+    var chartDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: { color: zinc[400], font: { size: 11 } }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: zinc[500], font: { size: 10 } },
+                grid: { color: zinc[800] },
+                border: { color: zinc[700] }
+            },
+            y: {
+                ticks: { color: zinc[500], font: { size: 10 } },
+                grid: { color: zinc[800] },
+                border: { color: zinc[700] }
+            }
+        }
+    };
+
+    // Alerts by Severity (Bar)
+    var sevData = chartData.alerts_by_severity || {};
+    new Chart(document.getElementById('chart-severity'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(sevData),
+            datasets: [{
+                label: 'Alerts',
+                data: Object.values(sevData),
+                backgroundColor: [zinc[600], zinc[500], zinc[400], zinc[300]],
+                borderColor: [zinc[500], zinc[400], zinc[300], zinc[200]],
+                borderWidth: 1
+            }]
+        },
+        options: Object.assign({}, chartDefaults, {
+            plugins: { legend: { display: false } }
+        })
+    });
+
+    // Cases by Status (Doughnut)
+    var caseData = chartData.cases_by_status || {};
+    new Chart(document.getElementById('chart-case-status'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(caseData),
+            datasets: [{
+                data: Object.values(caseData),
+                backgroundColor: [zinc[300], zinc[400], zinc[500], zinc[600], zinc[700]],
+                borderColor: zinc[900],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: zinc[400], font: { size: 11 }, padding: 12 }
+                }
+            }
+        }
+    });
+
+    // SLA Compliance (Doughnut gauge)
+    var slaVal = chartData.sla_compliance_percentage;
+    var slaDisplay = slaVal !== null && slaVal !== undefined ? slaVal : 0;
+    new Chart(document.getElementById('chart-sla'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Compliant', 'Non-compliant'],
+            datasets: [{
+                data: [slaDisplay, 100 - slaDisplay],
+                backgroundColor: [zinc[300], zinc[800]],
+                borderColor: zinc[900],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: true }
+            }
+        },
+        plugins: [{
+            id: 'centerText',
+            afterDraw: function(chart) {
+                var ctx = chart.ctx;
+                var w = chart.width, h = chart.height;
+                ctx.save();
+                ctx.font = 'bold 1.5rem sans-serif';
+                ctx.fillStyle = zinc[200];
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(slaDisplay + '%', w / 2, h / 2);
+                ctx.restore();
+            }
+        }]
+    });
+
+    // MITRE Distribution (Horizontal Bar)
+    var mitreData = chartData.mitre_distribution || {};
+    new Chart(document.getElementById('chart-mitre'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(mitreData),
+            datasets: [{
+                label: 'Count',
+                data: Object.values(mitreData),
+                backgroundColor: zinc[500],
+                borderColor: zinc[400],
+                borderWidth: 1
+            }]
+        },
+        options: Object.assign({}, chartDefaults, {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } }
+        })
+    });
+})();
+</script>
+{% endblock %}

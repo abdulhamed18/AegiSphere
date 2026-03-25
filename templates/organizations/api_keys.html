@@ -1,0 +1,95 @@
+{% extends "base/app.html" %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-lg font-semibold text-zinc-100">API Keys Management</h1>
+        <p class="text-sm text-zinc-500 mt-0.5">Manage your workspace API keys</p>
+    </div>
+    <div class="flex items-center gap-2">
+        <a href="{% url 'organizations:dashboard' %}?tab=access" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-3 py-1.5 hover:bg-zinc-700 transition-colors">Back to Dashboard</a>
+        <button onclick="AegisModal.open('apikey-gen-modal')" class="text-xs bg-zinc-200 text-zinc-900 font-medium rounded-md px-3 py-1.5 hover:bg-zinc-300 transition-colors">Generate Key</button>
+    </div>
+</div>
+
+<div class="bg-zinc-900 border border-zinc-800 rounded-md p-6 mb-6">
+    <!-- Basic tab mimicking -->
+    <div class="border-b border-zinc-800 mb-4">
+        <nav class="flex gap-4 -mb-px">
+            <button class="px-1 py-2 text-sm font-medium border-b-2 border-emerald-500 text-zinc-100">All</button>
+            <button class="px-1 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500">Active</button>
+            <button class="px-1 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500">Revoked</button>
+            <button class="px-1 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500">Rotated</button>
+        </nav>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-zinc-800">
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Key Name</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Prefix</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Created</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Last Used</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800">
+                {% for key in api_keys %}
+                <tr class="hover:bg-zinc-800 transition-colors">
+                    <td class="px-4 py-3 text-zinc-200">{{ key.name }}</td>
+                    <td class="px-4 py-3 text-zinc-400 font-mono">{{ key.key_prefix }}••••••••</td>
+                    <td class="px-4 py-3 text-xs text-zinc-500">{{ key.created_at|date:"M d, Y" }}</td>
+                    <td class="px-4 py-3 text-xs text-zinc-500">{{ key.last_used_at|date:"M d, Y H:i"|default:"Never" }}</td>
+                    <td class="px-4 py-3">
+                        {% if key.is_active %}
+                        <span class="text-xs text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-md">Active</span>
+                        {% else %}
+                        <span class="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-md">Revoked</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        {% if key.is_active %}
+                        <div class="flex items-center gap-2">
+                            <button onclick="rotateApiKey('{{ key.pk }}')" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-2 py-1 hover:bg-zinc-700 transition-colors">Rotate</button>
+                            <form method="post" action="{% url 'organizations:revoke-key' key.pk %}" onsubmit="return confirm('Revoke this API key?');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-xs bg-red-950/30 border border-red-900/50 text-red-400 rounded-md px-2 py-1 hover:bg-red-900/50 transition-colors">Revoke</button>
+                            </form>
+                        </div>
+                        {% else %}<span class="text-xs text-zinc-600">—</span>{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="px-4 py-8 text-center text-zinc-500">No API keys generated</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function rotateApiKey(keyId) {
+    if(!confirm('Rotate this API key? This will invalidate the old key.')) return;
+    fetch(`/organizations/api-keys/${keyId}/rotate/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if(data.success && data.raw_key) {
+            alert("New key: " + data.raw_key + "\nPlease copy it now. Page will reload.");
+            window.location.reload();
+        } else {
+            alert(data.error || 'Failed to rotate key');
+        }
+    });
+}
+</script>
+
+{% include "organizations/_modals.html" %}
+{% endblock %}

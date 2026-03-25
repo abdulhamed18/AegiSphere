@@ -1,0 +1,82 @@
+<!-- Integrations Tab -->
+
+<div class="bg-zinc-900 border border-zinc-800 rounded-md p-6 mb-6">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-sm font-medium text-zinc-300 flex items-center gap-2">
+            <svg class="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75 16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z"/></svg>
+            Wazuh Integration
+        </h2>
+        <div class="flex items-center gap-2">
+            <span class="text-xs text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-md">Connected</span>
+        </div>
+    </div>
+
+    <!-- Integration Status -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-zinc-950 border border-zinc-800 rounded-md p-4">
+            <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Parser Status</p>
+            <p class="text-sm font-medium text-emerald-400">Active</p>
+        </div>
+        <div class="bg-zinc-950 border border-zinc-800 rounded-md p-4">
+            <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Last Log Received</p>
+            <p class="text-sm font-medium text-zinc-100">2 mins ago</p>
+        </div>
+        <div class="bg-zinc-950 border border-zinc-800 rounded-md p-4">
+            <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Logs Today</p>
+            <p class="text-sm font-medium text-zinc-100">12,593</p>
+        </div>
+        <div class="bg-zinc-950 border border-zinc-800 rounded-md p-4">
+            <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Connected Agents</p>
+            <p class="text-sm font-medium text-zinc-100">42</p>
+        </div>
+    </div>
+
+    <!-- Integration Instructions -->
+    <h3 class="text-sm font-medium text-zinc-300 mb-4 border-b border-zinc-800 pb-2">Integration Instructions</h3>
+    
+    <div class="space-y-6">
+        <div>
+            <h4 class="text-xs font-semibold text-zinc-200 mb-2">Step 1 — Configure Wazuh Webhook</h4>
+            <p class="text-xs text-zinc-400 mb-2">Open your Wazuh Manager <code class="bg-zinc-800 px-1 rounded">ossec.conf</code> and add the following integration block:</p>
+            <pre class="bg-zinc-950 border border-zinc-800 rounded-md p-3 text-xs text-zinc-300 font-mono overflow-x-auto">
+&lt;integration&gt;
+  &lt;name&gt;custom-webhook&lt;/name&gt;
+  &lt;hook_url&gt;https://api.aegisphere.com/api/v1/ingest&lt;/hook_url&gt;
+  &lt;level&gt;3&lt;/level&gt;
+  &lt;jsonout&gt;yes&lt;/jsonout&gt;
+&lt;/integration&gt;</pre>
+        </div>
+        
+        <div>
+            <h4 class="text-xs font-semibold text-zinc-200 mb-2">Step 2 — Add API Key Authentication</h4>
+            <p class="text-xs text-zinc-400 mb-2">Modify the integration script to include your AegiSphere API key in the headers. Generate an API Key from the Access tab.</p>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3 text-xs text-zinc-300 font-mono">
+                Authorization: ApiKey &lt;YOUR_API_KEY&gt;
+            </div>
+        </div>
+
+        <div>
+            <h4 class="text-xs font-semibold text-zinc-200 mb-2">Step 3 — Restart Wazuh Manager</h4>
+            <p class="text-xs text-zinc-400 mb-2">Apply the changes by restarting the Wazuh Manager service:</p>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3 text-xs text-zinc-300 font-mono">
+                systemctl restart wazuh-manager
+            </div>
+        </div>
+        
+        <div>
+            <h4 class="text-xs font-semibold text-zinc-200 mb-2">Alternatively: Send Logs via cURL</h4>
+            <p class="text-xs text-zinc-400 mb-2">You can manually test ingestion by sending a JSON payload via cURL:</p>
+            <pre class="bg-zinc-950 border border-zinc-800 rounded-md p-3 text-xs text-zinc-300 font-mono overflow-x-auto">
+curl -X POST https://api.aegisphere.com/api/v1/ingest \
+  -H "Authorization: ApiKey YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "source": "wazuh",
+        "events": [{
+             "rule": {"level": 5, "description": "SSH Authentication failed"},
+             "agent": {"name": "server-01"}
+        }]
+      }'</pre>
+        </div>
+    </div>
+</div>

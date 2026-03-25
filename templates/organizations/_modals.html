@@ -1,0 +1,413 @@
+<!-- ==================== MODALS ==================== -->
+
+<!-- Create Invite Modal -->
+{% if can_manage %}
+<div id="create-invite-modal" data-modal class="hidden fixed inset-0 z-50 items-center justify-center">
+    <div class="modal-backdrop absolute inset-0 bg-black/60"></div>
+    <div class="modal-content relative bg-zinc-900 border border-zinc-800 rounded-md p-6 w-full max-w-md transform transition-all duration-150 opacity-0 scale-95">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-zinc-200">Create Invite Link</h3>
+            <button onclick="AegisModal.close('create-invite-modal')" class="text-zinc-500 hover:text-zinc-300 transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="create-invite-form">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block text-xs text-zinc-500 mb-1">Role for invited member</label>
+                <select name="role" class="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-600">
+                    {% for code, label in invite_role_choices %}
+                    <option value="{{ code }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="AegisModal.close('create-invite-modal')" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-3 py-1.5 hover:bg-zinc-700 transition-colors">Cancel</button>
+                <button type="submit" class="text-xs bg-zinc-200 text-zinc-900 font-medium rounded-md px-3 py-1.5 hover:bg-zinc-300 transition-colors">Generate Invite</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Invite Link Display Modal -->
+<div id="invite-link-modal" data-modal class="hidden fixed inset-0 z-50 items-center justify-center">
+    <div class="modal-backdrop absolute inset-0 bg-black/60"></div>
+    <div class="modal-content relative bg-zinc-900 border border-zinc-800 rounded-md p-6 w-full max-w-lg transform transition-all duration-150 opacity-0 scale-95">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-zinc-200">Invite Link Created</h3>
+            <button onclick="AegisModal.close('invite-link-modal')" class="text-zinc-500 hover:text-zinc-300 transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <p class="text-xs text-zinc-500 mb-3">Share this link with the person you want to invite.</p>
+        <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3 mb-4">
+            <code id="invite-url-display" class="text-xs text-zinc-300 font-mono break-all"></code>
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="AegisModal.close('invite-link-modal')" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-3 py-1.5 hover:bg-zinc-700 transition-colors">Close</button>
+            <button id="invite-url-copy-btn" class="text-xs bg-zinc-200 text-zinc-900 font-medium rounded-md px-3 py-1.5 hover:bg-zinc-300 transition-colors">Copy Link</button>
+        </div>
+    </div>
+</div>
+
+<!-- API Key Generation Input Modal -->
+{% if can_settings %}
+<div id="apikey-gen-modal" data-modal class="hidden fixed inset-0 z-50 items-center justify-center">
+    <div class="modal-backdrop absolute inset-0 bg-black/60"></div>
+    <div class="modal-content relative bg-zinc-900 border border-zinc-800 rounded-md p-6 w-full max-w-md transform transition-all duration-150 opacity-0 scale-95">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-zinc-200">Generate API Key</h3>
+            <button onclick="AegisModal.close('apikey-gen-modal')" class="text-zinc-500 hover:text-zinc-300 transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="apikey-gen-form">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block text-xs text-zinc-500 mb-1">Key Name</label>
+                <input type="text" name="name" required placeholder="e.g. SIEM Integration" class="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="AegisModal.close('apikey-gen-modal')" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-3 py-1.5 hover:bg-zinc-700 transition-colors">Cancel</button>
+                <button type="submit" class="text-xs bg-zinc-200 text-zinc-900 font-medium rounded-md px-3 py-1.5 hover:bg-zinc-300 transition-colors">Generate</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Secure API Key Display Modal -->
+<div id="secure-key-modal" data-modal class="hidden fixed inset-0 z-50 items-center justify-center">
+    <div class="modal-backdrop absolute inset-0 bg-black/60"></div>
+    <div class="modal-content relative bg-zinc-900 border border-zinc-800 rounded-md p-6 w-full max-w-lg transform transition-all duration-150 opacity-0 scale-95">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-zinc-200">API Key Generated</h3>
+            <span id="secure-key-timer" class="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded-md font-mono">60s</span>
+        </div>
+        <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3 mb-3">
+            <p class="text-xs text-zinc-500 mb-2">Copy this key now. It will not be shown again.</p>
+            <code id="secure-key-display" class="text-xs text-zinc-200 font-mono break-all select-all"></code>
+        </div>
+        <div class="flex justify-end">
+            <button id="secure-key-copy-btn" class="text-xs bg-zinc-200 text-zinc-900 font-medium rounded-md px-4 py-1.5 hover:bg-zinc-300 transition-colors flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9.75a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184"/></svg>
+                Copy & Close
+            </button>
+        </div>
+    </div>
+</div>
+<!-- Add Source Wizard Modal (Feature 1) -->
+{% if can_settings %}
+<div id="add-source-modal" data-modal class="hidden fixed inset-0 z-50 items-center justify-center">
+    <div class="modal-backdrop absolute inset-0 bg-black/60"></div>
+    <div class="modal-content relative bg-zinc-900 border border-zinc-800 rounded-md p-6 w-full max-w-2xl transform transition-all duration-150 opacity-0 scale-95 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-zinc-200">Add Data Source Wizard</h3>
+            <button onclick="AegisModal.close('add-source-modal')" class="text-zinc-500 hover:text-zinc-300 transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        
+        <form method="post" action="{% url 'organizations:add-source' %}">
+            {% csrf_token %}
+        <!-- Step 1: Select Source Type -->
+        <div id="wizard-step-1" class="mb-4 block">
+            <h4 class="text-xs font-semibold text-zinc-300 mb-2 border-b border-zinc-800 pb-2">Step 1 — Source Information</h4>
+            <div class="mb-4">
+                <label class="block text-xs text-zinc-500 mb-1">Source Name</label>
+                <input type="text" name="name" placeholder="e.g. Wazuh Production" required class="w-full bg-zinc-950 border border-zinc-800 rounded-md px-3 py-1.5 text-sm text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors">
+            </div>
+            <h5 class="text-xs font-semibold text-zinc-300 mb-2 border-b border-zinc-800 pb-2">Select Source Type</h5>
+            <div class="grid grid-cols-2 gap-4">
+                <label class="block cursor-pointer">
+                    <input type="radio" name="source_type" value="wazuh" class="peer sr-only" checked>
+                    <div class="p-4 rounded-md border border-zinc-700 bg-zinc-800 peer-checked:border-emerald-500 peer-checked:ring-1 peer-checked:ring-emerald-500 transition-colors">
+                        <h5 class="text-sm font-medium text-zinc-200 mb-1">Wazuh</h5>
+                        <p class="text-[10px] text-zinc-400">Receive EDR & HIDS logs from Wazuh Manager.</p>
+                    </div>
+                </label>
+                <label class="block cursor-not-allowed opacity-50">
+                    <input type="radio" name="source_type" value="suricata" class="peer sr-only" disabled>
+                    <div class="p-4 rounded-md border border-zinc-800 bg-zinc-950">
+                        <div class="flex justify-between items-center mb-1">
+                            <h5 class="text-sm font-medium text-zinc-200">Suricata</h5>
+                            <span class="text-[8px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded uppercase font-bold">Coming Soon</span>
+                        </div>
+                        <p class="text-[10px] text-zinc-400">Network intrusion detection system events.</p>
+                    </div>
+                </label>
+                <label class="block cursor-not-allowed opacity-50">
+                    <input type="radio" name="source_type" value="firewall" class="peer sr-only" disabled>
+                    <div class="p-4 rounded-md border border-zinc-800 bg-zinc-950">
+                        <div class="flex justify-between items-center mb-1">
+                            <h5 class="text-sm font-medium text-zinc-200">Firewall</h5>
+                            <span class="text-[8px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded uppercase font-bold">Coming Soon</span>
+                        </div>
+                        <p class="text-[10px] text-zinc-400">Standard network firewall traffic logs.</p>
+                    </div>
+                </label>
+                <label class="block cursor-not-allowed opacity-50">
+                    <input type="radio" name="source_type" value="sysmon" class="peer sr-only" disabled>
+                    <div class="p-4 rounded-md border border-zinc-800 bg-zinc-950">
+                        <div class="flex justify-between items-center mb-1">
+                            <h5 class="text-sm font-medium text-zinc-200">Sysmon</h5>
+                            <span class="text-[8px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded uppercase font-bold">Coming Soon</span>
+                        </div>
+                        <p class="text-[10px] text-zinc-400">Windows System Monitor events.</p>
+                    </div>
+                </label>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button type="button" onclick="document.getElementById('wizard-step-1').classList.replace('block', 'hidden'); document.getElementById('wizard-step-2').classList.replace('hidden', 'block');" class="text-xs bg-zinc-200 text-zinc-900 font-medium rounded-md px-4 py-1.5 hover:bg-zinc-300 transition-colors">Next</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Select Ingestion Method -->
+        <div id="wizard-step-2" class="mb-4 hidden">
+            <h4 class="text-xs font-semibold text-zinc-300 mb-2 border-b border-zinc-800 pb-2">Step 2 — Select Ingestion Method</h4>
+            <div class="grid grid-cols-1 gap-4">
+                <label class="block cursor-pointer">
+                    <input type="radio" name="ingestion_method" value="webhook" class="peer sr-only" checked>
+                    <div class="p-4 rounded-md border border-zinc-700 bg-zinc-800 peer-checked:border-emerald-500 peer-checked:ring-1 peer-checked:ring-emerald-500 transition-colors">
+                        <h5 class="text-sm font-medium text-zinc-200 mb-1">Webhook</h5>
+                        <p class="text-[10px] text-zinc-400">Send logs via HTTP POST over TLS. Best for cloud infra and most reliable parsing.</p>
+                    </div>
+                </label>
+                <label class="block cursor-not-allowed opacity-50">
+                    <input type="radio" name="ingestion_method" value="connector" class="peer sr-only" disabled>
+                    <div class="p-4 rounded-md border border-zinc-800 bg-zinc-950 flex justify-between items-center">
+                        <div>
+                            <h5 class="text-sm font-medium text-zinc-200 mb-1">Connector</h5>
+                            <p class="text-[10px] text-zinc-400">Pull logs directly from a third-party API.</p>
+                        </div>
+                        <span class="text-[8px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded uppercase font-bold">Coming Soon</span>
+                    </div>
+                </label>
+                <label class="block cursor-not-allowed opacity-50">
+                    <input type="radio" name="ingestion_method" value="syslog" class="peer sr-only" disabled>
+                    <div class="p-4 rounded-md border border-zinc-800 bg-zinc-950 flex justify-between items-center">
+                        <div>
+                            <h5 class="text-sm font-medium text-zinc-200 mb-1">Syslog</h5>
+                            <p class="text-[10px] text-zinc-400">Receive logs via native Syslog daemon on port 514.</p>
+                        </div>
+                        <span class="text-[8px] bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded uppercase font-bold">Coming Soon</span>
+                    </div>
+                </label>
+            </div>
+            <div class="flex justify-between mt-4">
+                <button type="button" onclick="document.getElementById('wizard-step-2').classList.replace('block', 'hidden'); document.getElementById('wizard-step-1').classList.replace('hidden', 'block');" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-4 py-1.5 hover:bg-zinc-700 transition-colors">Back</button>
+                <button type="button" onclick="document.getElementById('wizard-step-2').classList.replace('block', 'hidden'); document.getElementById('wizard-step-3').classList.replace('hidden', 'block');" class="text-xs bg-zinc-200 text-zinc-900 font-medium rounded-md px-4 py-1.5 hover:bg-zinc-300 transition-colors">Next</button>
+            </div>
+        </div>
+
+        <!-- Step 3: API Key Generational -->
+        <div id="wizard-step-3" class="mb-4 hidden">
+            <h4 class="text-xs font-semibold text-zinc-300 mb-2 border-b border-zinc-800 pb-2">Step 3 — API Key Authentication</h4>
+            <p class="text-xs text-zinc-400 mb-4">Select or create an API key for log ingestion authentication.</p>
+            
+            <div class="bg-zinc-950 border border-zinc-800 p-4 rounded-md">
+                <div class="mb-4">
+                    <label class="flex items-center gap-2 cursor-pointer mb-2">
+                        <input type="radio" name="api_key_choice" value="new" class="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-emerald-500 focus:ring-0 focus:ring-offset-0" checked>
+                        <span class="text-sm text-zinc-300">Generate a new API key (Recommended)</span>
+                    </label>
+                    <div class="pl-6 mt-2">
+                        <input type="text" placeholder="e.g., Wazuh Integration Key" class="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-zinc-600">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="flex items-center gap-2 cursor-pointer mb-2">
+                        <input type="radio" name="api_key_choice" value="existing" class="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-emerald-500 focus:ring-0 focus:ring-offset-0">
+                        <span class="text-sm text-zinc-300">Use existing API key</span>
+                    </label>
+                    <div class="pl-6 mt-2 opacity-100">
+                        <select name="api_key" class="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-zinc-600">
+                            {% for key in active_api_keys %}
+                            <option value="{{ key.id }}">{{ key.name }}</option>
+                            {% empty %}
+                            <option>No active API keys found</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between mt-4">
+                <button type="button" onclick="document.getElementById('wizard-step-3').classList.replace('block', 'hidden'); document.getElementById('wizard-step-2').classList.replace('hidden', 'block');" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-4 py-1.5 hover:bg-zinc-700 transition-colors">Back</button>
+                <button type="button" onclick="document.getElementById('wizard-step-3').classList.replace('block', 'hidden'); document.getElementById('wizard-step-4').classList.replace('hidden', 'block');" class="text-xs bg-zinc-200 text-zinc-900 font-medium rounded-md px-4 py-1.5 hover:bg-zinc-300 transition-colors">Next</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Integration Instructions -->
+        <div id="wizard-step-4" class="mb-4 hidden">
+            <h4 class="text-xs font-semibold text-zinc-300 mb-2 border-b border-zinc-800 pb-2">Step 4 — Integration Instructions</h4>
+            <div class="bg-emerald-950/30 border border-emerald-900/50 rounded-md p-3 mb-4">
+                <p class="text-xs text-emerald-400 font-medium">Source configuration saved! Follow these instructions to send data.</p>
+            </div>
+            
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-1">
+                    <h5 class="text-[10px] text-zinc-500 uppercase tracking-wider">Webhook Endpoint</h5>
+                    <button type="button" onclick="navigator.clipboard.writeText('POST /api/v1/ingest'); AegisToast.show('Endpoint copied');" class="text-[10px] text-zinc-400 hover:text-zinc-200">Copy</button>
+                </div>
+                <code class="block w-full bg-zinc-950 border border-zinc-800 rounded-md p-2 text-xs text-zinc-300 font-mono text-center">POST /api/v1/ingest</code>
+            </div>
+
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-1">
+                    <h5 class="text-[10px] text-zinc-500 uppercase tracking-wider">Required Headers</h5>
+                    <button type="button" onclick="navigator.clipboard.writeText('Authorization: ApiKey YOUR_API_KEY\nContent-Type: application/json'); AegisToast.show('Headers copied');" class="text-[10px] text-zinc-400 hover:text-zinc-200">Copy</button>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-2 text-xs text-zinc-300 font-mono">
+                    Authorization: ApiKey YOUR_API_KEY<br>
+                    Content-Type: application/json
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-1">
+                    <h5 class="text-[10px] text-zinc-500 uppercase tracking-wider">cURL Example</h5>
+                    <button type="button" onclick="navigator.clipboard.writeText('curl -X POST /api/v1/ingest \\\n -H \&quot;Authorization: ApiKey YOUR_API_KEY\&quot; \\\n -H \&quot;Content-Type: application/json\&quot; \\\n -d \'{ \&quot;source\&quot;: \&quot;wazuh\&quot;, \&quot;events\&quot;: [...] }\''); AegisToast.show('cURL copied');" class="text-[10px] text-zinc-400 hover:text-zinc-200">Copy</button>
+                </div>
+                <pre class="w-full bg-zinc-950 border border-zinc-800 rounded-md p-3 text-[10px] text-zinc-300 font-mono overflow-x-auto">curl -X POST /api/v1/ingest \
+ -H "Authorization: ApiKey YOUR_API_KEY" \
+ -H "Content-Type: application/json" \
+ -d '{ "source": "wazuh", "events": [...] }'</pre>
+            </div>
+
+            <div class="flex justify-between mt-4">
+                <button type="button" onclick="document.getElementById('wizard-step-4').classList.replace('block', 'hidden'); document.getElementById('wizard-step-3').classList.replace('hidden', 'block');" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-4 py-1.5 hover:bg-zinc-700 transition-colors">Back</button>
+                <button type="submit" class="text-xs bg-emerald-500 text-emerald-950 font-medium rounded-md px-4 py-1.5 hover:bg-emerald-400 transition-colors">Finish & Close</button>
+            </div>
+        </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Parser Error Viewer Modal -->
+<div id="parser-error-modal" data-modal class="hidden fixed inset-0 z-50 items-center justify-center">
+    <div class="modal-backdrop absolute inset-0 bg-black/60"></div>
+    <div class="modal-content relative bg-zinc-900 border border-zinc-800 rounded-md p-6 w-full max-w-2xl transform transition-all duration-150 opacity-0 scale-95">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-zinc-200">Parser Error Details</h3>
+            <button onclick="AegisModal.close('parser-error-modal')" class="text-zinc-500 hover:text-zinc-300 transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3">
+                <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Timestamp</p>
+                <p class="text-sm text-zinc-200">2026-03-08 10:15:32 UTC</p>
+            </div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3">
+                <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Parser</p>
+                <p class="text-sm text-zinc-200">Wazuh JSON Parser</p>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Error Message</p>
+            <div class="bg-red-950/30 border border-red-900/50 rounded-md p-3">
+                <code class="text-xs text-red-400 font-mono block">SchemaValidation Error: Missing required field 'event_type' in log payload. Expected value present at key [data][type].</code>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Raw Event Sample</p>
+            <pre class="bg-zinc-950 border border-zinc-800 rounded-md p-3 text-[10px] text-zinc-300 font-mono overflow-x-auto w-full max-h-48 overflow-y-auto">
+{
+  "timestamp": "2026-03-08T10:15:32.405Z",
+  "rule": {
+    "level": 3,
+    "description": "Network traffic dropped",
+    "id": "1002"
+  },
+  "agent": {
+    "id": "001",
+    "name": "WIN-SRV-01",
+    "ip": "10.0.0.15"
+  },
+  "manager": {
+    "name": "wazuh.hq.local"
+  },
+  "id": "1646734532.145620"
+}
+            </pre>
+        </div>
+
+        <div class="flex justify-end gap-2 text-right">
+            <button onclick="AegisModal.close('parser-error-modal')" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-4 py-1.5 hover:bg-zinc-700 transition-colors">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- AJAX Scripts for Invite & API Key -->
+<script>
+(function(){
+    // Invite form AJAX
+    var inviteForm = document.getElementById('create-invite-form');
+    if (inviteForm) {
+        inviteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(inviteForm);
+            fetch('{% url "organizations:create-invite" %}', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                AegisModal.close('create-invite-modal');
+                if (data.success) {
+                    AegisModal.showInviteLink(data.invite_url);
+                } else {
+                    AegisToast.show(data.error || 'Failed to create invite', 'error');
+                }
+            })
+            .catch(function() {
+                AegisModal.close('create-invite-modal');
+                AegisToast.show('Network error creating invite', 'error');
+            });
+        });
+    }
+
+    // API Key form AJAX
+    var apikeyForm = document.getElementById('apikey-gen-form');
+    if (apikeyForm) {
+        apikeyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(apikeyForm);
+            fetch('{% url "organizations:generate-key" %}', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                AegisModal.close('apikey-gen-modal');
+                if (data.success) {
+                    AegisModal.showSecureKey(data.raw_key);
+                    AegisToast.show('API key generated successfully', 'success');
+                    var copyBtn = document.getElementById('secure-key-copy-btn');
+                    if(copyBtn) {
+                        copyBtn.addEventListener('click', function() {
+                            setTimeout(function(){ window.location.reload(); }, 500);
+                        }, {once: true});
+                    }
+                } else {
+                    AegisToast.show(data.error || 'Failed to generate key', 'error');
+                }
+                apikeyForm.reset();
+            })
+            .catch(function() {
+                AegisModal.close('apikey-gen-modal');
+                AegisToast.show('Network error generating key', 'error');
+            });
+        });
+    }
+})();
+</script>

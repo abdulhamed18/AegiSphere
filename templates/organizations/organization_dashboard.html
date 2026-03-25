@@ -1,0 +1,190 @@
+{% extends "base/app.html" %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-lg font-semibold text-zinc-100">Organization Control Panel</h1>
+        <p class="text-sm text-zinc-500 mt-0.5">Manage your workspace team, security, and integrations</p>
+    </div>
+    <div class="flex items-center gap-2">
+        <span class="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded-md">{{ workspace.workspace_type|upper }}</span>
+        <span class="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded-md">ID: {{ workspace.id }}</span>
+    </div>
+</div>
+
+<!-- Tab Navigation -->
+<div id="org-tabs-container">
+    <div class="border-b border-zinc-800 mb-6">
+        <nav class="flex gap-0 -mb-px flex-wrap">
+            <button data-tab-btn="overview" class="px-4 py-2.5 text-sm font-medium border-b-2 border-zinc-200 text-zinc-100 transition-colors hover:text-zinc-200">Overview</button>
+            <button data-tab-btn="members" class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-500 transition-colors hover:text-zinc-200">Members</button>
+            <button data-tab-btn="access" class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-500 transition-colors hover:text-zinc-200">Access</button>
+            <button data-tab-btn="integrations" class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-500 transition-colors hover:text-zinc-200">Integrations</button>
+            <button data-tab-btn="ingestion" class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-500 transition-colors hover:text-zinc-200">Ingestion</button>
+            <button data-tab-btn="security" class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-500 transition-colors hover:text-zinc-200">Security</button>
+            <button data-tab-btn="settings" class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-500 transition-colors hover:text-zinc-200">Settings</button>
+        </nav>
+    </div>
+
+    <!-- ==================== OVERVIEW TAB ==================== -->
+    <div data-tab-panel="overview" class="block">
+        <!-- Ingestion Health Indicators -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-md p-6 mb-6">
+            <h2 class="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
+                Ingestion Health
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-4">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Connected Sources</p>
+                    <p class="text-2xl font-semibold text-emerald-400">1<span class="text-sm text-zinc-500 ml-1 font-normal">active</span></p>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-4">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Logs Today</p>
+                    <p class="text-2xl font-semibold text-zinc-100">12,593</p>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-4">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Ingestion Errors</p>
+                    <p class="text-2xl font-semibold text-zinc-100">0<span class="text-sm text-zinc-500 ml-1 font-normal">24h</span></p>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-4">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Active Parsers</p>
+                    <p class="text-2xl font-semibold text-zinc-100">2</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Organization Overview Cards -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-md p-6 mb-6">
+            <h2 class="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
+                <svg class="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z"/></svg>
+                Organization Overview
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Name</p>
+                    <p class="text-sm font-medium text-zinc-100 truncate">{{ overview.name }}</p>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Org ID</p>
+                    <p class="text-sm font-medium text-zinc-100">{{ overview.id }}</p>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Created</p>
+                    <p class="text-sm font-medium text-zinc-100">{{ overview.created_at|date:"M d, Y" }}</p>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Members</p>
+                    <p class="text-2xl font-semibold text-zinc-100">{{ overview.member_count }}</p>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Active Alerts</p>
+                    <p class="text-2xl font-semibold text-zinc-100">{{ overview.active_alerts }}</p>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">Active Cases</p>
+                    <p class="text-2xl font-semibold text-zinc-100">{{ overview.active_cases }}</p>
+                </div>
+                <div class="bg-zinc-950 border border-zinc-800 rounded-md p-3">
+                    <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">SLA Breaches</p>
+                    <p class="text-2xl font-semibold text-zinc-100">{{ overview.sla_breaches }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analyst Workload -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-md p-6 mb-6">
+            <h2 class="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
+                <svg class="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
+                Analyst Workload
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b border-zinc-800">
+                        <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Analyst</th>
+                        <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Role</th>
+                        <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Open Alerts</th>
+                        <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Active Cases</th>
+                    </tr></thead>
+                    <tbody class="divide-y divide-zinc-800">
+                        {% for entry in analyst_workload %}
+                        <tr class="hover:bg-zinc-800 transition-colors">
+                            <td class="px-4 py-3 text-zinc-200">{{ entry.user.username }}</td>
+                            <td class="px-4 py-3 text-zinc-400">{{ entry.role.name }}</td>
+                            <td class="px-4 py-3"><span class="text-sm text-zinc-200">{{ entry.open_alerts }}</span></td>
+                            <td class="px-4 py-3"><span class="text-sm text-zinc-200">{{ entry.active_cases }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="px-4 py-8 text-center text-zinc-500">No analysts assigned</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Analyst Activity -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-md p-6">
+            <h2 class="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
+                <svg class="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                Analyst Activity
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="border-b border-zinc-800">
+                        <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Analyst</th>
+                        <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Alerts Handled</th>
+                        <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Cases Resolved</th>
+                        <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Last Active</th>
+                    </tr></thead>
+                    <tbody class="divide-y divide-zinc-800">
+                        {% for entry in analyst_activity %}
+                        <tr class="hover:bg-zinc-800 transition-colors">
+                            <td class="px-4 py-3 text-zinc-200">{{ entry.user.username }}</td>
+                            <td class="px-4 py-3 text-zinc-200">{{ entry.alerts_resolved }}</td>
+                            <td class="px-4 py-3 text-zinc-200">{{ entry.cases_closed }}</td>
+                            <td class="px-4 py-3 text-xs text-zinc-500">{% if entry.last_active %}{{ entry.last_active|timesince }} ago{% else %}Never{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="px-4 py-8 text-center text-zinc-500">No analyst activity</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MEMBERS TAB ==================== -->
+    <div data-tab-panel="members" class="hidden">
+        {% include "organizations/_tab_members.html" %}
+    </div>
+
+    <!-- ==================== ACCESS TAB ==================== -->
+    <div data-tab-panel="access" class="hidden">
+        {% include "organizations/_tab_access.html" %}
+    </div>
+
+    <!-- ==================== INTEGRATIONS TAB ==================== -->
+    <div data-tab-panel="integrations" class="hidden">
+        {% include "organizations/_tab_integrations.html" %}
+    </div>
+
+    <!-- ==================== INGESTION TAB ==================== -->
+    <div data-tab-panel="ingestion" class="hidden">
+        {% include "organizations/_tab_ingestion.html" %}
+    </div>
+
+    <!-- ==================== SECURITY TAB ==================== -->
+    <div data-tab-panel="security" class="hidden">
+        {% include "organizations/_tab_security.html" %}
+    </div>
+
+    <!-- ==================== SETTINGS TAB ==================== -->
+    <div data-tab-panel="settings" class="hidden">
+        {% include "organizations/_tab_settings.html" %}
+    </div>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+{% include "organizations/_modals.html" %}
+{% endblock %}

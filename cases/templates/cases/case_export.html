@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Case Export - {{ case.title }}</title>
+    <style>
+        @page {
+            margin: 1.5cm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 8pt;
+                color: #666;
+            }
+        }
+        body { font-family: sans-serif; font-size: 11pt; line-height: 1.4; margin: 1.5cm; color: #333; }
+        body::before {
+            content: "CONFIDENTIAL";
+            position: fixed;
+            top: 40%;
+            left: 15%;
+            font-size: 80pt;
+            color: rgba(200, 0, 0, 0.08);
+            transform: rotate(-30deg);
+        }
+        h1 { font-size: 16pt; border-bottom: 2px solid #333; padding-bottom: 0.3em; margin-top: 0; }
+        h2 { font-size: 12pt; margin-top: 1.2em; margin-bottom: 0.4em; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+        th, td { border: 1px solid #666; padding: 0.3em 0.5em; text-align: left; }
+        th { background: #eee; font-weight: bold; }
+        .section { margin-bottom: 1em; page-break-inside: avoid; }
+        .meta { font-size: 9pt; color: #666; }
+        .internal { background: #ffebee; }
+        .resolution-summary { border: 1px solid #333; background: #f5f5f5; padding: 0.5em; }
+        .truncation-note { font-size: 9pt; color: #666; font-style: italic; margin-bottom: 0.5em; }
+        ul { margin: 0.3em 0; padding-left: 1.5em; }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h1>Case Export: {{ case.title }}</h1>
+        <p class="meta">Exported {{ data.exported_at }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Case Information</h2>
+        <table>
+            <tr><th>ID</th><td>{{ case.id }}</td></tr>
+            <tr><th>Title</th><td>{{ case.title }}</td></tr>
+            <tr><th>Description</th><td>{{ case.description|default:"—" }}</td></tr>
+            <tr><th>Severity</th><td>{{ case.severity }}</td></tr>
+            <tr><th>Priority</th><td>{{ case.priority }}</td></tr>
+            <tr><th>Status</th><td>{{ case.status }}</td></tr>
+            <tr><th>Outcome</th><td>{{ case.outcome|default:"—" }}</td></tr>
+            <tr><th>Created</th><td>{{ case.created_at|date:"Y-m-d H:i" }}</td></tr>
+            <tr><th>Closed</th><td>{{ case.closed_at|date:"Y-m-d H:i"|default:"—" }}</td></tr>
+            <tr><th>Closed by</th><td>{% if case.closed_by %}{{ case.closed_by.get_full_name|default:case.closed_by.username }}{% else %}—{% endif %}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>SLA Information</h2>
+        <table>
+            <tr><th>Deadline</th><td>{{ case.sla_deadline|date:"Y-m-d H:i"|default:"—" }}</td></tr>
+            <tr><th>Breached</th><td>{{ case.sla_breached|yesno:"Yes,No" }}</td></tr>
+            <tr><th>MTTR (hours)</th><td>{{ data.metrics_snapshot.mttr_hours|floatformat:2 }}</td></tr>
+            <tr><th>SLA Compliance %</th><td>{{ data.metrics_snapshot.sla_compliance|floatformat:1 }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Alerts</h2>
+        {% if data.alerts %}
+        <table>
+            <thead><tr><th>ID</th><th>Title</th><th>Severity</th><th>Source</th><th>MITRE</th></tr></thead>
+            <tbody>
+            {% for a in data.alerts %}
+            <tr><td>{{ a.id }}</td><td>{{ a.title }}</td><td>{{ a.severity }}</td><td>{{ a.source }}</td><td>{{ a.mitre_technique|default:"—" }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No alerts linked.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Notes</h2>
+        {% if data.notes %}
+        <table>
+            <thead><tr><th>Internal</th><th>Content</th><th>Date</th></tr></thead>
+            <tbody>
+            {% for n in data.notes %}
+            <tr class="{% if n.is_internal %}internal{% endif %}"><td>{{ n.is_internal|yesno:"Yes,No" }}</td><td>{{ n.content }}</td><td>{{ n.created_at }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No notes.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Tasks</h2>
+        {% if data.tasks %}
+        <table>
+            <thead><tr><th>Title</th><th>Completed</th><th>Date</th></tr></thead>
+            <tbody>
+            {% for t in data.tasks %}
+            <tr><td>{{ t.title }}</td><td>{{ t.is_completed|yesno:"Yes,No" }}</td><td>{{ t.completed_at|default:t.created_at }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No tasks.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>IOCs</h2>
+        {% if data.iocs %}
+        <table>
+            <thead><tr><th>Type</th><th>Value</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for i in data.iocs %}
+            <tr><td>{{ i.type }}</td><td>{{ i.value }}</td><td>{{ i.enrichment_status }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No IOCs.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Timeline</h2>
+        {% if data.timeline %}
+        {% if data.timeline_truncated %}
+        <p class="truncation-note">Timeline truncated to last 5000 entries.</p>
+        {% endif %}
+        <table>
+            <thead><tr><th>Action</th><th>Actor</th><th>Date</th></tr></thead>
+            <tbody>
+            {% for a in data.timeline %}
+            <tr><td>{{ a.action_type }}</td><td>{{ a.actor|default:"System" }}</td><td>{{ a.created_at }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No activity.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>MITRE Techniques</h2>
+        {% if data.mitre_techniques %}
+        <p>{{ data.mitre_techniques|join:", " }}</p>
+        {% else %}
+        <p>None.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Resolution Summary</h2>
+        <div class="resolution-summary">
+            <p>{{ case.resolution_summary|default:"—" }}</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Compliance</h2>
+        <table>
+            <tr><th>External Reference ID</th><td>{{ case.external_reference_id|default:"—" }}</td></tr>
+            <tr><th>Reported Externally</th><td>{{ case.reported_externally|yesno:"Yes,No" }}</td></tr>
+            <tr><th>Reported At</th><td>{{ case.reported_at|date:"Y-m-d H:i"|default:"—" }}</td></tr>
+            <tr><th>Compliance Notes</th><td>{{ case.compliance_notes|default:"—" }}</td></tr>
+        </table>
+    </div>
+</body>
+</html>

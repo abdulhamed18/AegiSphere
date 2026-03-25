@@ -1,0 +1,233 @@
+{% extends "base/app.html" %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h2 class="text-lg font-medium text-zinc-100">{{ case.title }}</h2>
+        <p class="text-sm text-zinc-500 mt-0.5">{{ subtitle }}</p>
+    </div>
+    <div class="flex items-center gap-3">
+        {% if can_export %}
+        <button id="export-btn" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-3 py-1.5 hover:bg-zinc-700 transition-colors">Export</button>
+        {% endif %}
+        <a href="{% url 'cases:list' %}" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">← Back to Cases</a>
+    </div>
+</div>
+
+<div class="grid grid-cols-12 gap-6">
+    <!-- Main Content -->
+    <div class="col-span-12 lg:col-span-8">
+        <!-- Tabs -->
+        <div class="border-b border-zinc-800 mb-4">
+            <nav class="flex gap-0 -mb-px">
+                {% for tab in "timeline,alerts,tasks,iocs,attachments"|make_list %}{% endfor %}
+                <a href="?tab=timeline"
+                   class="px-4 py-2 text-sm transition-colors border-b-2 {% if active_tab == 'timeline' %}border-zinc-300 text-zinc-200{% else %}border-transparent text-zinc-500 hover:text-zinc-300{% endif %}">Timeline</a>
+                <a href="?tab=alerts"
+                   class="px-4 py-2 text-sm transition-colors border-b-2 {% if active_tab == 'alerts' %}border-zinc-300 text-zinc-200{% else %}border-transparent text-zinc-500 hover:text-zinc-300{% endif %}">Alerts</a>
+                <a href="?tab=tasks"
+                   class="px-4 py-2 text-sm transition-colors border-b-2 {% if active_tab == 'tasks' %}border-zinc-300 text-zinc-200{% else %}border-transparent text-zinc-500 hover:text-zinc-300{% endif %}">Tasks</a>
+                <a href="?tab=iocs"
+                   class="px-4 py-2 text-sm transition-colors border-b-2 {% if active_tab == 'iocs' %}border-zinc-300 text-zinc-200{% else %}border-transparent text-zinc-500 hover:text-zinc-300{% endif %}">IOCs</a>
+                <a href="?tab=attachments"
+                   class="px-4 py-2 text-sm transition-colors border-b-2 {% if active_tab == 'attachments' %}border-zinc-300 text-zinc-200{% else %}border-transparent text-zinc-500 hover:text-zinc-300{% endif %}">Attachments</a>
+            </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-md p-4">
+            {% if active_tab == 'timeline' %}
+            <div class="space-y-3">
+                {% for event in activity_logs %}
+                <div class="flex gap-3 items-start text-sm">
+                    <div class="w-1.5 h-1.5 rounded-full bg-zinc-600 mt-1.5 flex-shrink-0"></div>
+                    <div class="min-w-0">
+                        <p class="text-zinc-300">{{ event.action }}</p>
+                        <p class="text-xs text-zinc-500 mt-0.5">{{ event.actor.username|default:"System" }} · {{ event.created_at|timesince }} ago</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-zinc-500">No activity recorded</p>
+                {% endfor %}
+            </div>
+
+            {% elif active_tab == 'alerts' %}
+            <div class="space-y-2">
+                {% for alert, sla in linked_alerts %}
+                <a href="{% url 'alerts:detail' alert.pk %}" class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-zinc-800 transition-colors">
+                    <div class="min-w-0">
+                        <p class="text-sm text-zinc-200 truncate">{{ alert.title }}</p>
+                        <p class="text-xs text-zinc-500 mt-0.5">{{ alert.severity }} · {{ alert.status }}</p>
+                    </div>
+                    <div>
+                        {% if sla.is_overdue %}
+                        <span class="text-xs text-zinc-300 bg-zinc-700 px-2 py-0.5 rounded-md">Overdue</span>
+                        {% elif sla.is_near_breach %}
+                        <span class="text-xs text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-md">Near Breach</span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% empty %}
+                <p class="text-sm text-zinc-500">No linked alerts</p>
+                {% endfor %}
+            </div>
+
+            {% elif active_tab == 'tasks' %}
+            <div class="space-y-2">
+                {% for task in tasks %}
+                <div class="flex items-center justify-between px-3 py-2 rounded-md border border-zinc-800">
+                    <div class="min-w-0">
+                        <p class="text-sm text-zinc-200">{{ task.title }}</p>
+                        {% if task.assignee %}
+                        <p class="text-xs text-zinc-500 mt-0.5">Assigned to {{ task.assignee.username }}</p>
+                        {% endif %}
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded-md
+                        {% if task.status == 'DONE' %}bg-zinc-700 text-zinc-300{% else %}bg-zinc-800 text-zinc-400{% endif %}">
+                        {{ task.status }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-sm text-zinc-500">No tasks</p>
+                {% endfor %}
+            </div>
+
+            {% elif active_tab == 'iocs' %}
+            <div class="space-y-2">
+                {% for ioc in iocs %}
+                <div class="flex items-center justify-between px-3 py-2 rounded-md border border-zinc-800">
+                    <div class="min-w-0">
+                        <p class="text-sm text-zinc-200 font-mono truncate">{{ ioc.value }}</p>
+                        <p class="text-xs text-zinc-500 mt-0.5">{{ ioc.ioc_type }} {% if ioc.is_malicious %}· Malicious{% endif %}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-zinc-500">No IOCs</p>
+                {% endfor %}
+            </div>
+
+            {% elif active_tab == 'attachments' %}
+            <div class="space-y-2">
+                {% for att in attachments %}
+                <div class="flex items-center justify-between px-3 py-2 rounded-md border border-zinc-800">
+                    <div class="min-w-0">
+                        <p class="text-sm text-zinc-200 truncate">{{ att.filename|default:att.file.name }}</p>
+                        <p class="text-xs text-zinc-500 mt-0.5">Uploaded {{ att.created_at|timesince }} ago</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-zinc-500">No attachments</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar: Metadata -->
+    <div class="col-span-12 lg:col-span-4 space-y-6">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-md p-4">
+            <h3 class="text-sm font-medium text-zinc-300 mb-3">Details</h3>
+            <dl class="space-y-3 text-sm">
+                <div class="flex justify-between">
+                    <dt class="text-zinc-500">Severity</dt>
+                    <dd>
+                        <span class="px-2 py-0.5 text-xs rounded-md
+                            {% if case.severity == 'CRITICAL' %}bg-zinc-200 text-zinc-900
+                            {% elif case.severity == 'HIGH' %}bg-zinc-400 text-zinc-900
+                            {% elif case.severity == 'MEDIUM' %}bg-zinc-600 text-zinc-200
+                            {% else %}bg-zinc-700 text-zinc-300{% endif %}">
+                            {{ case.severity }}
+                        </span>
+                    </dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-zinc-500">Status</dt>
+                    <dd class="text-zinc-300">{{ case.status }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-zinc-500">Assigned to</dt>
+                    <dd class="text-zinc-300">{{ case.assigned_to.username|default:"Unassigned" }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-zinc-500">Created</dt>
+                    <dd class="text-zinc-300 text-xs">{{ case.created_at|date:"M d, Y H:i" }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-zinc-500">SLA</dt>
+                    <dd>
+                        {% if sla_flags.is_overdue %}
+                        <span class="text-xs text-zinc-300 bg-zinc-700 px-2 py-0.5 rounded-md">Overdue</span>
+                        {% elif sla_flags.is_near_breach %}
+                        <span class="text-xs text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-md">Near Breach</span>
+                        {% else %}
+                        <span class="text-xs text-zinc-500">On Track</span>
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
+        {% if tags %}
+        <div class="bg-zinc-900 border border-zinc-800 rounded-md p-4">
+            <h3 class="text-sm font-medium text-zinc-300 mb-3">Tags</h3>
+            <div class="flex flex-wrap gap-1.5">
+                {% for tag in tags %}
+                <span class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-400 px-2 py-0.5 rounded-md">{{ tag.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if can_export %}
+<!-- Export Modal (hidden by default) -->
+<div id="export-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-md p-6 w-full max-w-sm">
+        <h3 class="text-sm font-medium text-zinc-200 mb-4">Export Case</h3>
+        <div class="space-y-2">
+            <button data-format="json" class="export-action w-full text-left px-3 py-2 text-sm text-zinc-300 rounded-md bg-zinc-800 hover:bg-zinc-700 transition-colors">Export JSON</button>
+            <button data-format="pdf" class="export-action w-full text-left px-3 py-2 text-sm text-zinc-300 rounded-md bg-zinc-800 hover:bg-zinc-700 transition-colors">Export PDF</button>
+            <button data-format="both" class="export-action w-full text-left px-3 py-2 text-sm text-zinc-300 rounded-md bg-zinc-800 hover:bg-zinc-700 transition-colors">Export Both</button>
+        </div>
+        <button id="export-cancel" class="mt-4 w-full text-center text-xs text-zinc-500 hover:text-zinc-300 transition-colors">Cancel</button>
+    </div>
+</div>
+<script>
+(function() {
+    var btn = document.getElementById('export-btn');
+    var modal = document.getElementById('export-modal');
+    var cancel = document.getElementById('export-cancel');
+    if (!btn || !modal) return;
+
+    btn.addEventListener('click', function() { modal.classList.remove('hidden'); });
+    cancel.addEventListener('click', function() { modal.classList.add('hidden'); });
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.add('hidden'); });
+
+    document.querySelectorAll('.export-action').forEach(function(el) {
+        el.addEventListener('click', function() {
+            var fmt = el.getAttribute('data-format');
+            fetch('{% url "cases:case-export" case.pk %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ format: fmt })
+            })
+            .then(function(r) { return r.blob(); })
+            .then(function(blob) {
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'case_{{ case.pk }}_export.' + (fmt === 'both' ? 'zip' : fmt);
+                a.click();
+                modal.classList.add('hidden');
+            })
+            .catch(function() { alert('Export failed'); });
+        });
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

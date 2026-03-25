@@ -1,0 +1,178 @@
+<!-- Security Tab -->
+
+{% if can_settings %}
+<!-- Parser Monitoring (Feature 7) -->
+<div class="bg-zinc-900 border border-zinc-800 rounded-md p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-medium text-zinc-300 flex items-center gap-2">
+            <svg class="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" /></svg>
+            Parser Monitoring
+        </h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead><tr class="border-b border-zinc-800">
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Parser Name</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Source</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Version</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Events Processed</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Last Error</th>
+            </tr></thead>
+            <tbody class="divide-y divide-zinc-800">
+                <tr class="hover:bg-zinc-800 transition-colors">
+                    <td class="px-4 py-3 text-zinc-100 font-medium">Wazuh JSON Parser</td>
+                    <td class="px-4 py-3 text-zinc-400">Wazuh</td>
+                    <td class="px-4 py-3 text-zinc-500">v1.2.0</td>
+                    <td class="px-4 py-3"><span class="text-xs text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-md">Active</span></td>
+                    <td class="px-4 py-3 text-zinc-200">1,204,500</td>
+                    <td class="px-4 py-3 text-zinc-500">None</td>
+                </tr>
+                <tr class="hover:bg-zinc-800 transition-colors">
+                    <td class="px-4 py-3 text-zinc-100 font-medium">Suricata EVE</td>
+                    <td class="px-4 py-3 text-zinc-400">Suricata</td>
+                    <td class="px-4 py-3 text-zinc-500">v1.0.5</td>
+                    <td class="px-4 py-3"><span class="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-md">Inactive</span></td>
+                    <td class="px-4 py-3 text-zinc-200">0</td>
+                    <td class="px-4 py-3 text-zinc-500">—</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Ingestion Error Logs (Feature 8) -->
+<div class="bg-zinc-900 border border-zinc-800 rounded-md p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-medium text-zinc-300 flex items-center gap-2">
+            <svg class="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            Ingestion Error Logs
+        </h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead><tr class="border-b border-zinc-800">
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Timestamp</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Source</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Error Type</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Message</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Raw Event</th>
+            </tr></thead>
+            <tbody class="divide-y divide-zinc-800">
+                {% for err in ingestion_errors %}
+                <tr class="hover:bg-zinc-800 transition-colors">
+                    <td class="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap"><span class="time-ago" data-timestamp="{{ err.received_at|date:'c' }}">{{ err.received_at|timesince }} ago</span></td>
+                    <td class="px-4 py-3 text-zinc-300">{{ err.source }}</td>
+                    <td class="px-4 py-3 text-red-400">ParseError</td>
+                    <td class="px-4 py-3 text-zinc-400 max-w-xs truncate">{{ err.parse_error|default:"Failed processing" }}</td>
+                    <td class="px-4 py-3">
+                        <button onclick="AegisModal.open('parser-error-modal')" class="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-md px-2 py-1 hover:bg-zinc-700 transition-colors">View Details</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-4 py-8 text-center text-zinc-500">No ingestion errors recorded</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if user_role == "ORG_OWNER" or user_role == "PERSONAL_OWNER" %}
+<!-- Audit Logs -->
+<div class="bg-zinc-900 border border-zinc-800 rounded-md p-6 mb-6">
+    <h2 class="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
+        <svg class="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+        Audit Logs
+    </h2>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead><tr class="border-b border-zinc-800">
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Timestamp</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">User</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Action</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Target</th>
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Details</th>
+            </tr></thead>
+            <tbody class="divide-y divide-zinc-800">
+                {% for log in audit_logs %}
+                <tr class="hover:bg-zinc-800 transition-colors">
+                    <td class="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap"><span class="time-ago" data-timestamp="{{ log.timestamp|date:'c' }}">{{ log.timestamp|timesince }} ago</span></td>
+                    <td class="px-4 py-3 text-zinc-300">{{ log.user.username|default:"System" }}</td>
+                    <td class="px-4 py-3 text-zinc-200">{{ log.action }}</td>
+                    <td class="px-4 py-3 text-zinc-400">{{ log.target|default:"—" }}</td>
+                    <td class="px-4 py-3 text-xs text-zinc-500 max-w-xs truncate">{% if log.metadata %}{{ log.metadata }}{% else %}—{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-4 py-8 text-center text-zinc-500">No audit log entries</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Role Permissions Matrix -->
+<div class="bg-zinc-900 border border-zinc-800 rounded-md p-6">
+    <h2 class="text-sm font-medium text-zinc-300 mb-4 flex items-center gap-2">
+        <svg class="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+        Role Permissions
+    </h2>
+    <p class="text-xs text-zinc-500 mb-4">This table shows what each role can do in your organization.</p>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead><tr class="border-b border-zinc-800">
+                <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Action</th>
+                {% for role in role_permissions_matrix.roles %}
+                <th class="text-center px-3 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider whitespace-nowrap">{{ role.name }}</th>
+                {% endfor %}
+            </tr></thead>
+            <tbody class="divide-y divide-zinc-800">
+                {% for row in role_permissions_matrix.rows %}
+                <tr class="hover:bg-zinc-800 transition-colors">
+                    <td class="px-4 py-3 text-zinc-200 whitespace-nowrap">{{ row.action }}</td>
+                    {% for granted in row.grants %}
+                    <td class="px-3 py-3 text-center">
+                        {% if granted %}
+                        <svg class="w-4 h-4 text-emerald-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        {% else %}
+                        <svg class="w-4 h-4 text-zinc-700 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function updateRelativeTimes() {
+    document.querySelectorAll('.time-ago').forEach(function(el) {
+        var dt = el.getAttribute('data-timestamp');
+        if (!dt) return;
+        var ts = new Date(dt);
+        var diffMs = new Date() - ts;
+        var diffMins = Math.floor(diffMs / 60000);
+        
+        if (diffMins < 1) {
+            el.textContent = '0 minutes ago';
+        } else if (diffMins < 60) {
+            el.textContent = diffMins + (diffMins === 1 ? ' minute ago' : ' minutes ago');
+        } else {
+            var diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) {
+                el.textContent = diffHours + (diffHours === 1 ? ' hour ago' : ' hours ago');
+            } else {
+                var diffDays = Math.floor(diffHours / 24);
+                el.textContent = diffDays + (diffDays === 1 ? ' day ago' : ' days ago');
+            }
+        }
+    });
+}
+
+setInterval(() => {
+    updateRelativeTimes();
+}, 60000);
+</script>

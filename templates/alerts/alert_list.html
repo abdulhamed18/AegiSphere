@@ -1,0 +1,139 @@
+{% extends "base/app.html" %}
+
+{% block content %}
+<!-- Filters -->
+<div class="bg-zinc-900 border border-zinc-800 rounded-md p-4 mb-6">
+    <form method="get" class="flex flex-wrap items-end gap-3">
+        <!-- Search -->
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs text-zinc-500 mb-1">Search</label>
+            <input type="text" name="q" value="{{ filter_q }}" placeholder="Search alerts..."
+                   class="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-0 focus:border-zinc-600">
+        </div>
+
+        <!-- Severity -->
+        <div>
+            <label class="block text-xs text-zinc-500 mb-1">Severity</label>
+            <select name="severity"
+                    class="bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:ring-0 focus:border-zinc-600">
+                {% for opt in severity_choices %}
+                <option value="{{ opt.value }}" {% if opt.value == filter_severity %}selected{% endif %}>{{ opt.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Status -->
+        <div>
+            <label class="block text-xs text-zinc-500 mb-1">Status</label>
+            <select name="status"
+                    class="bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:ring-0 focus:border-zinc-600">
+                {% for opt in status_choices %}
+                <option value="{{ opt.value }}" {% if opt.value == filter_status %}selected{% endif %}>{{ opt.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Assigned -->
+        <div>
+            <label class="block text-xs text-zinc-500 mb-1">Assigned</label>
+            <select name="assigned"
+                    class="bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:ring-0 focus:border-zinc-600">
+                {% for opt in assigned_choices %}
+                <option value="{{ opt.value }}" {% if opt.value == filter_assigned %}selected{% endif %}>{{ opt.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- SLA -->
+        <div>
+            <label class="block text-xs text-zinc-500 mb-1">SLA</label>
+            <select name="sla"
+                    class="bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:ring-0 focus:border-zinc-600">
+                {% for opt in sla_choices %}
+                <option value="{{ opt.value }}" {% if opt.value == filter_sla %}selected{% endif %}>{{ opt.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit"
+                class="bg-zinc-200 text-zinc-900 font-medium rounded-md px-4 py-1.5 text-sm hover:bg-zinc-300 transition-colors">
+            Filter
+        </button>
+    </form>
+</div>
+
+<!-- Alerts Table -->
+<div class="bg-zinc-900 border border-zinc-800 rounded-md overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-zinc-800">
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Title</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Severity</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Assigned</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">SLA</th>
+                    <th class="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider">Created</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800">
+                {% for alert, sla in alerts_with_sla %}
+                <tr class="hover:bg-zinc-800 transition-colors">
+                    <td class="px-4 py-3">
+                        <a href="{% url 'alerts:detail' alert.pk %}" class="text-zinc-200 hover:text-white transition-colors">
+                            {{ alert.title|truncatechars:60 }}
+                        </a>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="inline-block px-2 py-0.5 text-xs rounded-md
+                            {% if alert.severity == 'CRITICAL' %}bg-zinc-200 text-zinc-900
+                            {% elif alert.severity == 'HIGH' %}bg-zinc-400 text-zinc-900
+                            {% elif alert.severity == 'MEDIUM' %}bg-zinc-600 text-zinc-200
+                            {% else %}bg-zinc-700 text-zinc-300{% endif %}">
+                            {{ alert.severity }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-zinc-400">{{ alert.status }}</td>
+                    <td class="px-4 py-3 text-zinc-400">{{ alert.assigned_to.username|default:"—" }}</td>
+                    <td class="px-4 py-3">
+                        {% if sla.is_overdue %}
+                        <span class="text-xs text-zinc-300 bg-zinc-700 px-2 py-0.5 rounded-md">Overdue</span>
+                        {% elif sla.is_near_breach %}
+                        <span class="text-xs text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-md">Near Breach</span>
+                        {% elif sla.is_resolved %}
+                        <span class="text-xs text-zinc-500">Resolved</span>
+                        {% else %}
+                        <span class="text-xs text-zinc-500">On Track</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap">{{ alert.created_at|timesince }} ago</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-4 py-8 text-center text-zinc-500">No alerts found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if alerts_page.has_other_pages %}
+    <div class="border-t border-zinc-800 px-4 py-3 flex items-center justify-between">
+        <p class="text-xs text-zinc-500">
+            Page {{ alerts_page.number }} of {{ alerts_page.paginator.num_pages }}
+        </p>
+        <div class="flex items-center gap-1">
+            {% if alerts_page.has_previous %}
+            <a href="?page={{ alerts_page.previous_page_number }}&{{ query_string }}"
+               class="px-3 py-1 text-xs rounded-md bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors">Prev</a>
+            {% endif %}
+            {% if alerts_page.has_next %}
+            <a href="?page={{ alerts_page.next_page_number }}&{{ query_string }}"
+               class="px-3 py-1 text-xs rounded-md bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
